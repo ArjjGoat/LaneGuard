@@ -117,4 +117,4 @@ elif page == "Laneguard Demo":
     """)
 
 st.sidebar.markdown("---")
-st.sidebar.write("Developed by [Your Name]")
+st.sidebar.write("Developed by Arjun Bakhale and Ankit Rao")
