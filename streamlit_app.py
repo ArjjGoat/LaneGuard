@@ -1,4 +1,5 @@
 import streamlit as st
+from PIL import Image
 import cv2
 import numpy as np
 from streamlit_webrtc import webrtc_streamer, VideoTransformerBase, RTCConfiguration
@@ -115,7 +116,8 @@ def process_video_frame(frame):
     return lanes
 
 def main():
-    st.set_page_config(page_title="Lane Detection App", layout="wide", initial_sidebar_state="expanded")
+    im = Image.open("favicon.ico")
+    st.set_page_config(page_title="Lane Detection App", layout="wide", initial_sidebar_state="expanded", page_icon=im)
     st.markdown(custom_css, unsafe_allow_html=True)
 
     if 'show_disclaimer' not in st.session_state:
