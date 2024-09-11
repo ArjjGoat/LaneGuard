@@ -135,9 +135,7 @@ def main():
 def lane_detection_page():
     st.title("LaneGuard")
     
-    if st.button("Aren't on the road? Check out a demo", help="Click to see a pre-recorded demo of lane detection"):
-        st.session_state.app_mode = "Laneguard Demo"
-        st.experimental_rerun()
+
     
     input_type = st.radio("Select input type:", ("Live Video", "Upload MP4"), horizontal=True)
     
