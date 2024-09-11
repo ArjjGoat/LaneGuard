@@ -117,7 +117,7 @@ def process_video_frame(frame):
 
 def main():
     im = Image.open("favicon.ico")
-    st.set_page_config(page_title="Lane Detection App", layout="wide", initial_sidebar_state="expanded", page_icon=im)
+    st.set_page_config(page_title="LaneGuard", layout="wide", initial_sidebar_state="expanded", page_icon=im)
     st.markdown(custom_css, unsafe_allow_html=True)
 
     if 'show_disclaimer' not in st.session_state:
@@ -133,7 +133,7 @@ def main():
         laneguard_demo_page()
 
 def lane_detection_page():
-    st.title("Lane Detection App")
+    st.title("LaneGuard")
     
     if st.button("Aren't on the road? Check out a demo", help="Click to see a pre-recorded demo of lane detection"):
         st.session_state.app_mode = "Laneguard Demo"
