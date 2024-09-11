@@ -1,7 +1,7 @@
 import streamlit as st
 import cv2
 import numpy as np
-from streamlit_webrtc import webrtc_streamer, VideoTransformerBase, RTCConfiguration
+from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
 import tempfile
 import av
 
@@ -11,6 +11,7 @@ from laneDeparture import (
     display_lines, average_slope_intercept, make_coordinates, lane_detection
 )
 
+<<<<<<< HEAD
 # Custom CSS remains the same
 custom_css = """
 <style>
@@ -101,24 +102,25 @@ def process_video_frame(frame, frame_count):
     
     return lanes
 
+=======
+class LaneDetectionTransformer(VideoTransformerBase):
+    def transform(self, frame):
+        img = frame.to_ndarray(format="bgr24")
+        
+        # Process the frame using your lane detection function
+        averaged_lines = lane_detection(img)
+        black_lines = display_lines(img, averaged_lines)
+        lanes = cv2.addWeighted(img, 0.8, black_lines, 1, 1)
+        
+        return av.VideoFrame.from_ndarray(lanes, format="bgr24")
+
+>>>>>>> parent of f3fec45 (asdf)
 def main():
     st.set_page_config(page_title="Lane Detection App", layout="wide")
     
-    # Apply custom CSS
-    st.markdown(custom_css, unsafe_allow_html=True)
-    
-    st.sidebar.title("Navigation")
-    app_mode = st.sidebar.radio("Choose the app mode",
-        ["Lane Detection", "Laneguard Demo"])
-    
-    if app_mode == "Lane Detection":
-        lane_detection_page()
-    elif app_mode == "Laneguard Demo":
-        laneguard_demo_page()
-
-def lane_detection_page():
     st.title("Lane Detection App")
     
+<<<<<<< HEAD
     # Add a big button at the top to lead users to the demo
     if st.button("Aren't on the road? Check out a demo", 
                  key="demo_button", 
@@ -126,6 +128,8 @@ def lane_detection_page():
         st.session_state.app_mode = "Laneguard Demo"
         st.rerun()
     
+=======
+>>>>>>> parent of f3fec45 (asdf)
     st.sidebar.title("Settings")
     input_type = st.sidebar.radio("Select input type:", ("Live Video", "Upload MP4"))
     
@@ -135,11 +139,9 @@ def lane_detection_page():
         webrtc_ctx = webrtc_streamer(
             key="lane-detection",
             video_transformer_factory=LaneDetectionTransformer,
-            rtc_configuration=RTCConfiguration(
-                {"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]}
-            ),
-            media_stream_constraints={"video": True, "audio": False},
-            async_processing=True,
+            rtc_configuration={
+                "iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]
+            }
         )
     
     else:
@@ -163,11 +165,17 @@ def lane_detection_page():
                     if not ret:
                         break
                     
+<<<<<<< HEAD
                     frame_count += 1
                     processed_frame = process_video_frame(frame, frame_count)
+=======
+                    averaged_lines = lane_detection(frame)
+                    black_lines = display_lines(frame, averaged_lines)
+                    lanes = cv2.addWeighted(frame, 0.8, black_lines, 1, 1)
+>>>>>>> parent of f3fec45 (asdf)
                     
-                    processed_frame_rgb = cv2.cvtColor(processed_frame, cv2.COLOR_BGR2RGB)
-                    stframe.image(processed_frame_rgb, channels="RGB", use_column_width=True)
+                    lanes_rgb = cv2.cvtColor(lanes, cv2.COLOR_BGR2RGB)
+                    stframe.image(lanes_rgb, channels="RGB", use_column_width=True)
                 
                 cap.release()
     
@@ -185,28 +193,5 @@ def lane_detection_page():
     It processes each frame to identify and highlight lane markings.
     """)
 
-def laneguard_demo_page():
-    st.title("Laneguard Demo")
-    st.write("This demo shows the output of our lane detection algorithm on a pre-processed video.")
-
-    video_path = 'output_video_that_streamlit_can_play.mp4'
-    video_file = open(video_path, 'rb')
-    video_bytes = video_file.read()
-
-    st.video(video_bytes)
-
-    st.markdown("""
-    ## About Laneguard
-    Laneguard is our advanced lane detection system that helps drivers stay safely within their lanes.
-    This demo showcases the system's ability to detect and highlight lane markings in real-time.
-    """)
-
-    if st.button("Back to Lane Detection", key="back_button"):
-        st.session_state.app_mode = "Lane Detection"
-        st.rerun()
-
 if __name__ == "__main__":
-    if 'app_mode' not in st.session_state:
-        st.session_state.app_mode = "Lane Detection"
-    
     main()
