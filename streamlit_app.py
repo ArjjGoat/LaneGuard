@@ -231,7 +231,7 @@ def laneguard_demo_page():
     col1, col2, col3 = st.columns(3)
     col1.metric("Accuracy", "95%", "2%")
     col2.metric("Processing Speed", "30 FPS", "5 FPS")
-    col3.metric("Detection Range", "50 meters", "10 meters")
+    col3.metric("Detection Range", "268.2 meters", "10 meters")
 
     with st.expander("About Laneguard"):
         st.write("""
