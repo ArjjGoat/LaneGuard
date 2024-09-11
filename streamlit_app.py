@@ -43,28 +43,23 @@ custom_css = """
     .stSidebar .sidebar-content {
         background-color: #F3F4F6; /* Light sidebar background */
     }
+    .disclaimer {
+        background-color: #FEF3C7;
+        border: 1px solid #F59E0B;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
 </style>
 """
+
 class LaneDetectionTransformer(VideoTransformerBase):
-    def transform(self, frame):
-        img = frame.to_ndarray(format="bgr24")
-        
-        try:
-            # Process the frame using your lane detection function
-            averaged_lines = lane_detection(img)
-            black_lines = display_lines(img, averaged_lines)
-            lanes = cv2.addWeighted(img, 0.8, black_lines, 1, 1)
-        except Exception as e:
-            # If an error occurs, overlay the custom message on the frame
-            font = cv2.FONT_HERSHEY_SIMPLEX
-            cv2.putText(img, "Road not detected, please rerun when you're on the road", 
-                        (10, 50), font, 1, (255, 255, 255), 2, cv2.LINE_AA)
-            lanes = img
-        
-        return av.VideoFrame.from_ndarray(lanes, format="bgr24")
+    def __init__(self):
+        self.frame_count = 0
 
     def recv(self, frame):
         img = frame.to_ndarray(format="bgr24")
+        self.frame_count += 1
         
         try:
             # Process the frame using your lane detection function
@@ -78,9 +73,15 @@ class LaneDetectionTransformer(VideoTransformerBase):
                         (10, 50), font, 1, (255, 255, 255), 2, cv2.LINE_AA)
             lanes = img
         
+        # Add disclaimer text for the first 100 frames (about 3 seconds at 30 fps)
+        if self.frame_count <= 100:
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            cv2.putText(lanes, "Road isn't detected, please direct camera towards the road!", 
+                        (10, lanes.shape[0] - 20), font, 0.7, (0, 0, 255), 2, cv2.LINE_AA)
+        
         return av.VideoFrame.from_ndarray(lanes, format="bgr24")
 
-def process_video_frame(frame):
+def process_video_frame(frame, frame_count):
     try:
         averaged_lines = lane_detection(frame)
         black_lines = display_lines(frame, averaged_lines)
@@ -91,6 +92,13 @@ def process_video_frame(frame):
         cv2.putText(frame, "Road not detected, please rerun when you're on the road", 
                     (10, 50), font, 1, (255, 255, 255), 2, cv2.LINE_AA)
         lanes = frame
+    
+    # Add disclaimer text for the first 100 frames
+    if frame_count <= 100:
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        cv2.putText(lanes, "Road isn't detected, please direct camera towards the road!", 
+                    (10, lanes.shape[0] - 20), font, 0.7, (0, 0, 255), 2, cv2.LINE_AA)
+    
     return lanes
 
 def main():
@@ -111,7 +119,7 @@ def main():
 def lane_detection_page():
     st.title("Lane Detection App")
     
-    # Add a big red button at the top to lead users to the demo
+    # Add a big button at the top to lead users to the demo
     if st.button("Aren't on the road? Check out a demo", 
                  key="demo_button", 
                  help="Click to see a pre-recorded demo of lane detection"):
@@ -123,6 +131,7 @@ def lane_detection_page():
     
     if input_type == "Live Video":
         st.write("Live video processing:")
+        st.markdown('<div class="disclaimer">Road isn\'t detected, please direct camera towards the road!</div>', unsafe_allow_html=True)
         webrtc_ctx = webrtc_streamer(
             key="lane-detection",
             video_transformer_factory=LaneDetectionTransformer,
@@ -144,15 +153,18 @@ def lane_detection_page():
             st.video(tfile.name)
             
             if st.button("Process Video"):
+                st.markdown('<div class="disclaimer">Road isn\'t detected, please direct camera towards the road!</div>', unsafe_allow_html=True)
                 cap = cv2.VideoCapture(tfile.name)
                 stframe = st.empty()
+                frame_count = 0
                 
                 while cap.isOpened():
                     ret, frame = cap.read()
                     if not ret:
                         break
                     
-                    processed_frame = process_video_frame(frame)
+                    frame_count += 1
+                    processed_frame = process_video_frame(frame, frame_count)
                     
                     processed_frame_rgb = cv2.cvtColor(processed_frame, cv2.COLOR_BGR2RGB)
                     stframe.image(processed_frame_rgb, channels="RGB", use_column_width=True)
